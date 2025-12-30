@@ -12,12 +12,7 @@ const Gameboard = () => {
       return false;
     },
     // NEW: Reset method
-    reset: () => {
-      for (let i = 0; i < board.length; i++) {
-        board[i] = '';
-      }
-      // OR simply: board.fill('');
-    }
+    reset: () => board.fill('')
   };
 };
 

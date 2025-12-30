@@ -1,3 +1,4 @@
+// gameController.js - IIFE Module
 import Gameboard from './gameboard.js';
 import Player from './player.js';
 
@@ -5,6 +6,7 @@ const gameController = (() => {
     const board = Gameboard();
     const player1 = Player('Player 1', 'X');
     const player2 = Player('Player 2', 'O');
+    
     let currentPlayer = player1;
     let gameOver = false;
 
@@ -16,68 +18,48 @@ const gameController = (() => {
 
     const checkWinner = () => {
         const currentBoard = board.getBoard();
-        for (const pattern of winPatterns) {
-            const [a, b, c] = pattern;
-            if (currentBoard[a] && 
-                currentBoard[a] === currentBoard[b] && 
-                currentBoard[a] === currentBoard[c]) {
-                return currentBoard[a];
-            }
-        }
-        return null;
+        const mark = currentPlayer.getMark();
+        
+        return winPatterns.some(pattern => 
+            pattern.every(index => currentBoard[index] === mark)
+        ) ? currentPlayer.getName() : null;
     };
 
-    const checkTie = () => {
-        return board.getBoard().every(cell => cell !== '');
-    };
+    const checkTie = () => board.getBoard().every(cell => cell !== '');
 
     const switchPlayer = () => {
         currentPlayer = currentPlayer === player1 ? player2 : player1;
     };
 
     const playTurn = (index) => {
-        if (gameOver) {
-            console.log('Game is already over!');
-            return false;
-        }
-
-        if (board.placeMark(index, currentPlayer.getMark())) {
-            console.log(`${currentPlayer.getName()} placed ${currentPlayer.getMark()} at index ${index}`);
-            
-            const winner = checkWinner();
-            if (winner) {
-                gameOver = true;
-                console.log(`Game over! ${winner} wins!`);
-                return { success: true, gameOver: true, winner };
-            } else if (checkTie()) {
-                gameOver = true;
-                console.log('Game over! It\'s a tie!');
-                return { success: true, gameOver: true, tie: true };
-            }
-            
-            switchPlayer();
-            return { success: true, gameOver: false };
-        } else {
-            console.log('Invalid move. Try again.');
+        if (gameOver || !board.placeMark(index, currentPlayer.getMark())) {
             return { success: false };
         }
+
+        const winner = checkWinner();
+        const tie = !winner && checkTie();
+        
+        if (winner || tie) {
+            gameOver = true;
+            return { success: true, gameOver: true, winner, tie };
+        }
+
+        switchPlayer();
+        return { success: true, gameOver: false };
     };
 
-    // NEW: Reset function INSIDE the IIFE
     const resetGame = () => {
         board.reset();
         currentPlayer = player1;
         gameOver = false;
-        console.log('Game has been reset');
     };
 
-    // SINGLE return statement with all public methods
     return {
         playTurn,
         getBoard: board.getBoard,
         getCurrentPlayer: () => currentPlayer,
-        resetGame // Now properly included
+        resetGame
     };
-})(); // The IIFE ends here
+})();
 
 export default gameController;

@@ -1,8 +1,6 @@
-const Player = (name, mark) => {
-    return { 
-        getName: () => name,
-        getMark: () => mark
-    };
-};
+const Player = (name, mark) => ({
+    getName: () => name,
+    getMark: () => mark
+    });
 
 export default Player;

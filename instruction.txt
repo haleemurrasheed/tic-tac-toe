@@ -170,3 +170,9 @@ tic-tac-toe/
 ├── gameController.js (IIFE Module)
 ├── displayController.js (IIFE Module)
 └── script.js       (App entry point)
+
+script.js 
+  └─> displayController.js
+        └─> gameController.js
+              ├─> gameboard.js
+              └─> player.js

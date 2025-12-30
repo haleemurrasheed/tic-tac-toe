@@ -1,80 +1,59 @@
+// displayController.js - IIFE Module
 import gameController from './gameController.js';
 
 const displayController = (() => {
     const gameBoardElement = document.getElementById('gameBoard');
     const resetButton = document.getElementById('resetButton');
-    const statusElement = document.createElement('div'); // For showing turn/winner
+    const statusElement = document.createElement('div');
 
-    // Add status element to the page (insert it after the h1)
     document.querySelector('h1').insertAdjacentElement('afterend', statusElement);
 
-    const render = () => {
-    // 1. Get current game state
-    const board = gameController.getBoard();
-    const currentPlayer = gameController.getCurrentPlayer();
-    
-    // 2. Update status (only if game isn't over)
-    if (!statusElement.textContent.includes('Game Over')) {
-        statusElement.textContent = `${currentPlayer.getName()}'s turn (${currentPlayer.getMark()})`;
-    }
-    
-    // 3. Render board cells
-    gameBoardElement.innerHTML = '';
-    board.forEach((cell, index) => {
-        const cellElement = document.createElement('div');
-        cellElement.classList.add('cell');
-        cellElement.dataset.index = index;
-        cellElement.textContent = cell;
-        gameBoardElement.appendChild(cellElement);
-    });
-};
-
-    // Handle cell clicks - this is the MAIN game flow
- const handleCellClick = (index) => {
-    console.log(`Cell ${index} clicked`);
-    const result = gameController.playTurn(parseInt(index));
-    
-    if (result.success) {
-        render(); // Update the display
-        
-        // Check if game is over
-        if (result.gameOver) {
-            if (result.winner) {
-                statusElement.textContent = `Game Over! ${result.winner} wins!`;
-            } else if (result.tie) {
-                statusElement.textContent = "Game Over! It's a tie!";
-            }
-            
-            // Disable further clicks (optional but good UX)
+    const updateStatus = (result) => {
+        if (result && result.gameOver) {
+            statusElement.textContent = result.winner 
+                ? `Game Over! ${result.winner} wins!`
+                : "Game Over! It's a tie!";
             gameBoardElement.style.pointerEvents = 'none';
+        } else {
+            const player = gameController.getCurrentPlayer();
+            statusElement.textContent = `${player.getName()}'s turn (${player.getMark()})`;
         }
-    } else {
-        // Optional: Show a brief error for invalid move
-        console.log('Move was invalid');
-    }
-};
+    };
+
+    const render = () => {
+        const board = gameController.getBoard();
+        gameBoardElement.innerHTML = board
+            .map((cell, i) => `<div class="cell" data-index="${i}">${cell}</div>`)
+            .join('');
+    };
+
+    const handleCellClick = (index) => {
+        const result = gameController.playTurn(parseInt(index));
+        if (result.success) {
+            render();
+            updateStatus(result);
+        }
+    };
 
     const handleReset = () => {
-    console.log('Reset game');
-    gameController.resetGame();
-    gameBoardElement.style.pointerEvents = 'auto'; // Re-enable clicks
-    render(); // Re-render the cleared board
-};
+        gameController.resetGame();
+        gameBoardElement.style.pointerEvents = 'auto';
+        render();
+        updateStatus(); // Explicitly reset status to show Player 1's turn
+    };
 
-    // Initialize everything when module loads
     const init = () => {
-        render(); // Initial render
-        gameBoardElement.addEventListener('click', (event) => {
-            if (event.target.classList.contains('cell')) {
-                handleCellClick(event.target.dataset.index);
+        render();
+        updateStatus(); // Set initial status
+        gameBoardElement.addEventListener('click', (e) => {
+            if (e.target.classList.contains('cell')) {
+                handleCellClick(e.target.dataset.index);
             }
         });
         resetButton.addEventListener('click', handleReset);
     };
 
-    return {
-        init
-    };
+    return { init };
 })();
 
 export default displayController;
